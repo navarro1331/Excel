@@ -1,5 +1,5 @@
 import pandas as pd
-import my_mods # type: ignore
+import My_Mods # type: ignore
 
 # Set file paths and sheet names
 file_path = r'C:/Users/dsamu/dsamllc.net/dsamllc.net - Documents/FIS Project Documents/1Power Bi/Link Deviations.xlsx'
@@ -23,24 +23,24 @@ deviated_as_column = 'DEVIATED AS'
 POP_3_Classification = 'POP 3 Classification'
 
 # Step 1: Extract unique City Ids and write to Excel
-unique_city_ids_df = my_mods.extract_unique_city_ids(file_path, HOT_LINK_sheet_name, ci_column)
+unique_city_ids_df = My_Mods.extract_unique_city_ids(file_path, HOT_LINK_sheet_name, ci_column)
 if unique_city_ids_df is not None:
-    my_mods.write_to_excel(unique_city_ids_df, output_file_path, 'POP Hub', mode='w')
+    My_Mods.write_to_excel(unique_city_ids_df, output_file_path, 'POP Hub', mode='w')
 
 # Step 2: Load City IDs and merge with unique City Ids using CityIdFinder class
-city_id_finder = my_mods.CityIdFinder(city_id_file_path, ci_hub)
+city_id_finder = My_Mods.CityIdFinder(city_id_file_path, ci_hub)
 city_id_finder.load_city_id_data()
 
 if city_id_finder.city_id_df is not None:
     merge_columns = [sub_contractor_column_city_id, deviated_as_column, POP_3_Classification]
-    merged_df = my_mods.merge_city_dataframes(unique_city_ids_df, city_id_finder.city_id_df, ci_column, merge_columns)
+    merged_df = My_Mods.merge_city_dataframes(unique_city_ids_df, city_id_finder.city_id_df, ci_column, merge_columns)
     if merged_df is not None:
-        my_mods.write_to_excel(merged_df, output_file_path, 'POP Hub', mode='a')
+        My_Mods.write_to_excel(merged_df, output_file_path, 'POP Hub', mode='a')
 
 # Step 3: Sum Contract Amounts from the POP review file
 try:
     pop_review_df = pd.read_excel(pop_review_file_path, sheet_name=pop_POPTrackingWorkBook)
-    summed_contracts_df = my_mods.sum_contract_amounts(merged_df, pop_review_df, ci_column, contract_column)
+    summed_contracts_df = My_Mods.sum_contract_amounts(merged_df, pop_review_df, ci_column, contract_column)
     if summed_contracts_df is not None:
         final_df = pd.merge(merged_df, summed_contracts_df, on=ci_column, how='left')
 except Exception as e:
@@ -48,18 +48,18 @@ except Exception as e:
 
 # Step 4: Add POP Eligible column and save final DataFrame
 try:
-    final_df = my_mods.add_pop_eligible_column(final_df, contract_column, deviated_as_column)
-    my_mods.write_to_excel(final_df, output_file_path, 'POP Hub', mode='a')
+    final_df = My_Mods.add_pop_eligible_column(final_df, contract_column, deviated_as_column)
+    My_Mods.write_to_excel(final_df, output_file_path, 'POP Hub', mode='a')
 except Exception as e:
     print(f"Error in Step 4: {e}")
 
 # Step 5-7: Append additional found information from POP review file for 'oldest date', 'weekly', and 'quarterly'
 def append_information_by_column(output_file_path, pop_review_file_path, sheet_pop, hub_df, search_column):
     dfsheet_pop = pd.read_excel(pop_review_file_path, sheet_name=sheet_pop)
-    fvic_df = my_mods.find_value_in_column(dfsheet_pop, ci_column, hub_df[ci_column].dropna().tolist(), search_column)
+    fvic_df = My_Mods.find_value_in_column(dfsheet_pop, ci_column, hub_df[ci_column].dropna().tolist(), search_column)
     if isinstance(fvic_df, pd.DataFrame):
-        combined_df = my_mods.append_found_information(hub_df, fvic_df, ci_column)
-        my_mods.write_to_excel(combined_df, output_file_path, 'POP Hub')
+        combined_df = My_Mods.append_found_information(hub_df, fvic_df, ci_column)
+        My_Mods.write_to_excel(combined_df, output_file_path, 'POP Hub')
 
 try:
     hub_df = pd.read_excel(output_file_path, sheet_name='POP Hub')

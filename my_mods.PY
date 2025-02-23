@@ -1,5 +1,8 @@
 ﻿import pandas as pd
 from fuzzywuzzy import fuzz, process
+import pyautogui
+import time
+import openpyxl
 
 
 class CityIdFinder:
@@ -144,9 +147,6 @@ def sum_contract_amounts(merged_df, review_df, city_id_column, contract_column):
         return None
 
 def add_pop_eligible_column(df, contract_column, deviated_as_column):
-    """
-    Adds a 'POP Eligible' column based on the contract amount and deviated status.
-    """
     try:
         df['POP Eligible'] = df.apply(
             lambda row: 'Yes' if row[contract_column] > 200000 and row[deviated_as_column] != 'Supplier' else 'No',
@@ -275,9 +275,91 @@ def ghost_ci(
     else:
         print(f"Error: Column '{lookup_value_column}' not found in lookup_df.")
 
+def track_mouse_position(update_interval=0.1):
+    '''
+if __name__ == "__main__":
+    track_mouse_position(0.2)
+'''
+    print("Press Ctrl+C to stop.")
+    try:
+        while True:
+            x, y = pyautogui.position()
+            print(f"Mouse position: ({x}, {y})", end="\r")
+            time.sleep(update_interval)
+    except KeyboardInterrupt:
+        print("\nStopped tracking.")
 
+def read_data(file_path, sheet_name, start_row=1, start_col=1, end_row=None, end_col=None):
+    """
+    Read data from an Excel sheet within a specified range.
 
+    Parameters:
+    - file_path (str): Path to the Excel file.
+    - sheet_name (str): Name of the sheet to read data from.
+    - start_row (int): Starting row for reading data (1-indexed).
+    - start_col (int): Starting column for reading data (1-indexed).
+    - end_row (int): Ending row for reading data (1-indexed, optional).
+    - end_col (int): Ending column for reading data (1-indexed, optional).
 
+    Returns:
+    - data (list of lists): Extracted data organized as a 2D list.
+    """
+    try:
+        # Load the workbook and select the specified sheet
+        workbook = openpyxl.load_workbook(file_path)
+        if sheet_name not in workbook.sheetnames:
+            raise ValueError(f"Sheet '{sheet_name}' not found in {file_path}.")
+
+        worksheet = workbook[sheet_name]
+        data = []
+
+        # Define the range of cells to read
+        end_row = end_row or worksheet.max_row
+        end_col = end_col or worksheet.max_column
+
+        # Extract data within the specified range
+        for row in worksheet.iter_rows(min_row=start_row, max_row=end_row, min_col=start_col, max_col=end_col):
+            data.append([cell.value for cell in row])
+
+        return data
+
+    except Exception as e:
+        print(f"An error occurred while reading data: {e}")
+        return []
+
+def paste_data_as_values(file_path, sheet_name, data, start_row=1, start_col=1):
+    """
+    Paste data into an Excel sheet without changing existing formatting.
+
+    Parameters:
+    - file_path (str): Path to the Excel file.
+    - sheet_name (str): Name of the sheet to paste data into.
+    - data (list of lists): Data to paste, organized as a 2D list.
+    - start_row (int): Row number to start pasting data (1-indexed).
+    - start_col (int): Column number to start pasting data (1-indexed).
+    
+    Example:
+    >>> paste_data_as_values("example.xlsx", "Sheet1", [["A1", "B1"], ["A2", "B2"]], 2, 2)
+    """
+    try:
+        # Load the workbook and select the specified sheet
+        workbook = openpyxl.load_workbook(file_path)
+        if sheet_name not in workbook.sheetnames:
+            raise ValueError(f"Sheet '{sheet_name}' not found in {file_path}.")
+        
+        worksheet = workbook[sheet_name]
+        
+        # Paste data as values without changing existing formatting
+        for i, row in enumerate(data, start=start_row):
+            for j, value in enumerate(row, start=start_col):
+                worksheet.cell(row=i, column=j).value = value
+
+        # Save the workbook to preserve changes
+        workbook.save(file_path)
+        print(f"Data pasted successfully into '{file_path}', sheet '{sheet_name}'.")
+    
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 
